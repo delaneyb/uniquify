@@ -1,0 +1,23 @@
+{
+  "name": "uniquify",
+  "version": "1.0.0",
+  "description": "Generate 'similar' spotify playlists containing only unique new songs",
+  "main": "main.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/delaneyb/uniquify.git"
+  },
+  "author": "Benjamin Delaney",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/delaneyb/uniquify/issues"
+  },
+  "homepage": "https://github.com/delaneyb/uniquify#readme",
+  "dependencies": {
+    "express": "^4.16.3",
+    "spotify-web-api-node": "^3.1.1"
+  }
+}

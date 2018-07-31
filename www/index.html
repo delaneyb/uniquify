@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Uniquify</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body>
+    <a href="/spotifyAuth" target="_blank">Authenticate</a>
+
+    <pre>Your accessToken is: <span id="spotifyAuthCode"></span></pre>
+
+    <button onclick="listPlaylists();">List Playlists</button>
+    <pre id="me"></pre>
+
+    <script>
+
+        setInterval(() => {
+            accessToken = localStorage.getItem('accessToken');
+            document.getElementById('spotifyAuthCode').innerText = accessToken;
+        }, 50);
+
+        async function listPlaylists() {
+            const resp = await fetch('/getMe', {
+                headers: {
+                    accessToken
+                }
+            });
+
+            const json = await resp.json();
+            document.getElementById('me').innerText = JSON.stringify(json, null, 4);
+            
+        }
+        
+    </script>
+
+</body>
+</html>
