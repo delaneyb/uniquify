@@ -9,27 +9,41 @@
 <body>
     <a href="/spotifyAuth" target="_blank">Authenticate</a>
 
-    <pre>Your accessToken is: <span id="spotifyAuthCode"></span></pre>
+    <pre>Your accessToken is: <span data="accessToken"></span></pre>
 
-    <button onclick="listPlaylists();">List Playlists</button>
-    <pre id="me"></pre>
+    <button onclick="getMyDetails();">Get my Spotify user details</button>
+    <pre data="me"></pre>
 
     <script>
+        // Whenever a property of the app object/proxy is changed, any
+        // DOM elements with data=property attribute will have their
+        // innerHTML set to the new value
+        const app = new Proxy({}, {
+            set(obj, prop, val) {
+                if (prop == 'accessToken' && !val) app.me = '';
+                document.querySelectorAll(`[data=${prop}]`).forEach(e => e.innerHTML = JSON.stringify(val, null, 2));
+                Reflect.set(...arguments);
+            }
+        });
 
-        setInterval(() => {
-            accessToken = localStorage.getItem('accessToken');
-            document.getElementById('spotifyAuthCode').innerText = accessToken;
-        }, 50);
+        app.accessToken = localStorage.getItem('accessToken')
+        app.myData = ''
 
-        async function listPlaylists() {
+        // accessToken will be set from another tab when returning from spotity.
+        // Ensure correct state in this tab is maintained
+        window.addEventListener('storage', ({ key, newValue }) => {  
+            if (key == 'accessToken') app.accessToken = newValue;
+        })
+
+        async function getMyDetails() {
             const resp = await fetch('/getMe', {
                 headers: {
-                    accessToken
+                    accessToken: app.accessToken
                 }
             });
 
             const json = await resp.json();
-            document.getElementById('me').innerText = JSON.stringify(json, null, 4);
+            app.me = json;
             
         }
         
