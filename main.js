@@ -2,7 +2,6 @@ require('dotenv').config()
 const express = require('express')  // https://expressjs.com/
 var bodyParser = require('body-parser')
 const app = express()
-// parse application/json
 app.use(bodyParser.json())
 const SpotifyWebApi = require('spotify-web-api-node');  // https://github.com/thelinmichael/spotify-web-api-node
 const PORT_NO = 3000;

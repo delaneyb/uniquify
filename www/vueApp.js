@@ -17,7 +17,7 @@ var vueApp = new Vue({
         /** null if not logged in/undefined */
         me: lsCache.fetch('me'),
         playlists: lsCache.fetch('playlists'),
-        playlistsFilter: 'running',
+        playlistsFilter: '',
         /** playlist to remove songs from */
         removeFrom: undefined,
         /** array of playlists to look in for songs to remove from removeFrom */
