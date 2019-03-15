@@ -5,49 +5,74 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <title>Uniquify</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css"/>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
 </head>
 <body>
-    <a href="/spotifyAuth" target="_blank">Authenticate</a>
-
-    <pre>Your accessToken is: <span data="accessToken"></span></pre>
-
-    <button onclick="getMyDetails();">Get my Spotify user details</button>
-    <pre data="me"></pre>
-
-    <script>
-        // Whenever a property of the app object/proxy is changed, any
-        // DOM elements with data=property attribute will have their
-        // innerHTML set to the new value
-        const app = new Proxy({}, {
-            set(obj, prop, val) {
-                if (prop == 'accessToken' && !val) app.me = '';
-                document.querySelectorAll(`[data=${prop}]`).forEach(e => e.innerHTML = JSON.stringify(val, null, 2));
-                Reflect.set(...arguments);
-            }
-        });
-
-        app.accessToken = localStorage.getItem('accessToken')
-        app.myData = ''
-
-        // accessToken will be set from another tab when returning from spotity.
-        // Ensure correct state in this tab is maintained
-        window.addEventListener('storage', ({ key, newValue }) => {  
-            if (key == 'accessToken') app.accessToken = newValue;
-        })
-
-        async function getMyDetails() {
-            const resp = await fetch('/getMe', {
-                headers: {
-                    accessToken: app.accessToken
-                }
-            });
-
-            const json = await resp.json();
-            app.me = json;
-            
-        }
+    
+    
+    <div id="app">
+        <a href="/spotifyAuth">Authenticate</a>
         
-    </script>
+        <div v-show="accessToken">
+            <pre>accessToken: {{ accessToken }}</pre>
+            
+            <button @click="getMyDetails()" :disabled="!accessToken">Get my Spotify user details</button>
+            <h3>User profile:</h3>
+            <pre>{{ me }}</pre>
+
+            <button @click="getMyPlaylists()" :disabled="!me">Get my Playlists</button>
+            <div v-if="playlists">
+                <h3>{{ !removeFrom ? 'Select playlist to remove songs from' : 'Select playlists to look for duplicates in' }}</h3>
+                <button v-if="removeFrom" @click="resetSelection()">Reset</button>
+                <input type="text" v-model="playlistsFilter" placeholder="Filter">
+                <div class="playlists">
+                    <div v-for="playlist in playlists" class="playlist" :class="{ 'selected-using' : removeUsing.some(pl => pl.id == playlist.id) }" @click="select(playlist)" v-if="playlist.name.toLowerCase().includes(playlistsFilter.toLowerCase())">
+                        <img style="height: 48px; margin-bottom: 8px;" :src="playlist.images[0] ? playlist.images[0].url : ''">
+                        <span>{{ playlist.name }}</span>
+                    </div>
+                </div>
+                <pre>removefrom: {{ removeFrom ? removeFrom.name : '' }}</pre>
+                <pre>removeUsing: {{ removeUsing.map(p => p.name).join(', ') }}</pre>
+                <div class="comparisonArea">
+                    <div v-if="removeFrom">
+                        <table>
+                            <tr>
+                                <th>Artist(s)</th>
+                                <th>Track name</th>
+                                <th>BPM</th>
+                            </tr>
+                            <tr :class="{ 'to-delete': removeUsingTracks.some(tr => tr.track.id == plTrack.track.id) }" v-for="plTrack of removeFromTracks">
+                                <td>{{ plTrack.track.artists.map(a => a.name).join(', ') }}</td>
+                                <td>{{ plTrack.track.name }}</td>
+                                <td>{{ plTrack.track.tempo }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    <div v-if="removeUsing.length">
+                        <table>
+                            <tr>
+                                <th>Artist(s)</th>
+                                <th>Track name</th>
+                            </tr>
+                            <tr v-for="rmTrack of removeUsingTracks">
+                                <td>{{ rmTrack.track.artists.map(a => a.name).join(', ') }}</td>
+                                <td>{{ rmTrack.track.name }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <button v-if="removeUsing.length" class="remove-button" @click="deleteTracks(removeFrom, removeUsingTracks)">
+                    Remove tracks from {{ removeFrom.name }}
+                </button>
+            </div>
+        </div>
+
+        <button v-if="removeFrom" @click="getTracksFeatures(removeFromTracks)">Get removeFrom tracks features</button>
+
+    </div>
+
+    <script src="vueApp.js"></script>
 
 </body>
 </html>
