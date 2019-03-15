@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')  // https://expressjs.com/
 var bodyParser = require('body-parser')
 const app = express()
@@ -14,9 +15,12 @@ var scopes = ['user-read-private', 'user-read-email', 'playlist-read-private', '
 // Create new spotify node client lib instance
 // Before making API calls that require users specific details, use spotifyApi.setAccessToken(...)
 // method on this instance to set the accesstoken
+console.log(process.env.SPOTIFY_CLIENT_ID);
+console.log(process.env.SPOTIFY_CLIENT_SECRET);
+
 let spotifyApi = new SpotifyWebApi({
-    clientId: 'd52be6e576c84c7b977486ab6b5bac6d',
-    clientSecret: 'c3f51e944e6545f0b9387719b1c228cb',
+    clientId: process.env.SPOTIFY_CLIENT_ID,
+    clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
     redirectUri: 'http://' + (process.env.hostname || 'localhost') + ':' + PORT_NO + '/spotifyAuth'
 });
 
