@@ -1,3 +1,6 @@
+/**
+ * Methods for persisting our accessToken, playlists and user data to localStorage
+ */
 var lsCache = {
     fetch(key) {
         return JSON.parse(localStorage.getItem(key))
@@ -37,9 +40,6 @@ var vueApp = new Vue({
                     accessToken: this.accessToken
                 }
             }
-        },
-        selectedPlaylistTracks() {
-            return ''
         },
         /**
          * Returns a list of unique tracks in all the playlists we want to remove using
