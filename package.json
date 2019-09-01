@@ -1,7 +1,7 @@
 {
   "name": "uniquify",
   "version": "1.0.0",
-  "description": "Generate 'similar' spotify playlists containing only unique new songs",
+  "description": "Remove songs from one Spotify playlist using the contents of one or more others",
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
