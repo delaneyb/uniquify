@@ -4,6 +4,7 @@ var bodyParser = require('body-parser')
 const app = express()
 app.use(bodyParser.json())
 const SpotifyWebApi = require('spotify-web-api-node');  // https://github.com/thelinmichael/spotify-web-api-node
+const path = require('path')
 const PORT_NO = 3000;
 
 // NOTE: Getting Unauthorized errors means you need to get a new access token (todo: add ability for backend to refresh access token)
@@ -14,14 +15,19 @@ var scopes = ['user-read-private', 'user-read-email', 'playlist-read-private', '
 // Create new spotify node client lib instance
 // Before making API calls that require users specific details, use spotifyApi.setAccessToken(...)
 // method on this instance to set the accesstoken
-console.log(process.env.SPOTIFY_CLIENT_ID);
-console.log(process.env.SPOTIFY_CLIENT_SECRET);
+// console.log(process.env.SPOTIFY_CLIENT_ID);
+// console.log(process.env.SPOTIFY_CLIENT_SECRET);
 
 let spotifyApi = new SpotifyWebApi({
     clientId: process.env.SPOTIFY_CLIENT_ID,
     clientSecret: process.env.SPOTIFY_CLIENT_SECRET,
     redirectUri: 'http://' + (process.env.hostname || 'localhost') + ':' + PORT_NO + '/spotifyAuth'
 });
+
+// Serve any static files from static directory to clients. Do not use a relative path here i.e.
+// 'static' or static files will not be served as epxected when the script is executed from outside
+// its own dir e.g. `node src/main.js`
+app.use(express.static(path.join(__dirname, 'static')))
 
 app.use((req, res, next) => {
     console.log(`${req.socket.remoteAddress} requested ${req.url}`);
@@ -110,16 +116,22 @@ app.post('/getTracksFeatures', async (req, res) => {
  * Remove all tracks passed from the specified playlist for the specified user
  */
 app.post('/deleteTracks', async (req, res) => {
-    const tracksToRemove = req.body.trackURIs.map(uri => ({
+    const tracksToRemove = req.body.map(uri => ({
         uri
     }))
-    try {
-        const resp = await spotifyApi.removeTracksFromPlaylist(req.query.userID, req.query.playlistID, tracksToRemove)
-        console.log('deleteTracks got response from spotify:', resp);
-        res.send(resp)
-    } catch (error) {
-        res.status(400)
-        res.send({ error })
+    // (Max 100 removals at a time)
+    for (let i = 0; i < req.body.length; i += 100) {
+        try {
+            console.log('Request attempt to remove', tracksToRemove.length, 'tracks from', req.query.playlistID);
+            
+            const resp = await spotifyApi.removeTracksFromPlaylist(req.query.userID, req.query.playlistID, tracksToRemove.slice(i, i + 100))
+            console.log('deleteTracks got response from spotify:', resp);
+            res.send(resp)
+        } catch (error) {
+            console.warn('deleteTracks got error from spotify:', error);
+            res.status(400)
+            res.send({ error })
+        }
     }
 })
 
@@ -147,7 +159,5 @@ async function getAll(fn, maxLimit, ...args) {
     return items
 }
 
-// Serve any static files from www directory to clients
-app.use(express.static('www'))
 
-app.listen(PORT_NO, () => console.log('Express server listening on', (process.env.hostname || 'localhost') + ':' + PORT_NO))
+app.listen(PORT_NO, () => console.log(`${__filename}: Express server listening on http://${(process.env.hostname || 'localhost')}:${PORT_NO}`))

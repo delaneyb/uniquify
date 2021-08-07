@@ -20,9 +20,11 @@ body {
   grid-row-gap: 20px;
   max-height: 470px;
   overflow: auto;
-  box-shadow: inset 0 0 15px black;
+  /* box-shadow: inset 0 0 15px black; */
   border-radius: 3px;
   padding: 15px;
+  outline: 1px solid #d4d4d4;
+  margin-top: 16px;
 }
 
 .playlist {
@@ -45,8 +47,9 @@ body {
 .comparisonArea {
     display: flex;
     flex-direction: row;
-    max-height: 600px;
-    overflow: auto;
+    outline: 1px solid #d4d4d4;
+    max-height: 800px;
+    overflow-y: auto;
 }
 
 tr.to-delete {
@@ -67,4 +70,20 @@ button.remove-button {
     margin-top: 15px;
     padding: 8px;
     margin-bottom: 150px;
+}
+
+.playlist-contents-head {}
+
+.comparisonArea table {
+    width: 100%;
+}
+
+tbody.playlist-contents-body {
+}
+
+th {
+    top: 1px;
+    position: sticky;
+    background: #f1f1f1;
+    outline: 2px solid #f1f1f1;
 }

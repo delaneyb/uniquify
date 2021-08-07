@@ -32,31 +32,41 @@
                 </div>
                 <pre>removefrom: {{ removeFrom ? removeFrom.name : '' }}</pre>
                 <pre>removeUsing: {{ removeUsing.map(p => p.name).join(', ') }}</pre>
-                <div class="comparisonArea">
+                <div class="comparisonArea" v-if="removeFrom">
                     <div v-if="removeFrom">
                         <table>
-                            <tr>
-                                <th>Artist(s)</th>
-                                <th>Track name</th>
-                                <th>BPM</th>
-                            </tr>
-                            <tr :class="{ 'to-delete': removeUsingTracks.some(tr => tr.track.id == plTrack.track.id) }" v-for="plTrack of removeFromTracks">
-                                <td>{{ plTrack.track.artists.map(a => a.name).join(', ') }}</td>
-                                <td>{{ plTrack.track.name }}</td>
-                                <td>{{ plTrack.track.tempo }}</td>
-                            </tr>
+                            <thead class="playlist-contents-head">
+                                <tr>
+                                    <th>Artist(s)</th>
+                                    <th>Track name</th>
+                                    <th>BPM</th>
+                                </tr>
+                            </thead>
+                            <tbody class="playlist-contents-body">
+                                <tr :class="{ 'to-delete': willBeDeleted(plTrack) }" v-for="plTrack of removeFromTracks">
+                                    <td>{{ plTrack.track.artists.map(a => a.name).join(', ') }}</td>
+                                    <td>{{ plTrack.track.name }}</td>
+                                    <td>{{ plTrack.track.uri }}</td>
+                                    <td>{{ plTrack.track.tempo }}</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                     <div v-if="removeUsing.length">
                         <table>
-                            <tr>
-                                <th>Artist(s)</th>
-                                <th>Track name</th>
-                            </tr>
-                            <tr v-for="rmTrack of removeUsingTracks">
-                                <td>{{ rmTrack.track.artists.map(a => a.name).join(', ') }}</td>
-                                <td>{{ rmTrack.track.name }}</td>
-                            </tr>
+                            <thead class="playlist-contents-head">
+                                <tr>
+                                    <th>Artist(s)</th>
+                                    <th>Track name</th>
+                                </tr>
+                            </thead>
+                            <tbody class="playlist-contents-body">
+                                <tr v-for="rmTrack of removeUsingTracks">
+                                    <td>{{ rmTrack.track.artists.map(a => a.name).join(', ') }}</td>
+                                    <td>{{ rmTrack.track.name }}</td>
+                                    <td>{{ rmTrack.track.uri }}</td>
+                                </tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -74,3 +84,5 @@
 
 </body>
 </html>
+
+spotify:track:5yDZCMX6kiySxu3GCmzFEN

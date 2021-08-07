@@ -4,8 +4,8 @@
   "description": "Remove songs from one Spotify playlist using the contents of one or more others",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon --inspect ./main.js"
+    "start": "nodemon src/main.js",
+    "start-docker": "docker-compose up"
   },
   "repository": {
     "type": "git",
@@ -18,9 +18,10 @@
   },
   "homepage": "https://github.com/delaneyb/uniquify#readme",
   "dependencies": {
-    "body-parser": "^1.18.3",
-    "dotenv": "^7.0.0",
-    "express": "^4.16.3",
+    "body-parser": "^1.19.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "nodemon": "^2.0.12",
     "spotify-web-api-node": "^3.1.1"
   }
 }

@@ -1,0 +1,19 @@
+version: '3.8'
+services:
+  app:
+    # image: node-lts:alpine
+    build: .  # Use the dockerfile from the current directory
+    # restart: always  # Will relaunch if the server itself restarts
+    ports:
+      - "3000:3000"
+    working_dir: /app
+    # command: sh -c "npm ci install && npm start"
+    volumes:
+      # Note this stuff only gets mirrored AFTER the dockerfile has been built when the container is actually run, meaning none of it is there/mirrored during the dockerfile's build process
+      - .:/app
+      # https://stackoverflow.com/a/38601156
+      - node_modules:/app/node_modules
+
+
+volumes:
+    node_modules:

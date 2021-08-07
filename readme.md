@@ -14,7 +14,7 @@ Express
 **main.js** API (Express) and Spotify API functions
 
 
-**www**
+**src/static**
 
  - **index.html** Served by default on visiting /. Contains main vue component template
  

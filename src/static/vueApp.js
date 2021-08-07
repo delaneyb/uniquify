@@ -54,7 +54,7 @@ var vueApp = new Vue({
         },
         removeFromTracks() {
             return (this.removeFrom && this.removeFrom.tracks.length) ? this.sortedTracks(this.removeFrom.tracks) : []
-        },
+        }
     },
     methods: {
         /**
@@ -90,6 +90,18 @@ var vueApp = new Vue({
                     .localeCompare(trackB.track.artists.map(a => a.name).join() + trackB.track.name)
             })
         },
+        willBeDeleted(track) {
+            return this.removeUsingTracks.some(tr => {
+                // Determine if any artists are different
+                tr.artists = tr.artists || [];
+                track.artists = track.artists || [];
+                if (tr.artists.length != track.artists.length) return false;
+                for (const artist in tr.artists) {
+                    if (!track.artists.includes(artist)) return false;
+                }
+                return tr.track.name.toLowerCase() == track.track.name.toLowerCase()
+            })
+        },
         async getMyDetails() {
             const resp = await fetch('/getMe', this.apiRequestOptions);
             this.me = await resp.json();
@@ -121,18 +133,15 @@ var vueApp = new Vue({
             console.log('Track features:', featuresByTrack);
         },
         async deleteTracks(playlist, tracksToRemove) {
-            const removeUsingURIs = this.removeUsingTracks.map(tr => tr.track.uri)
-            const trackURIs = Array.from(new Set(removeUsingURIs.filter(uri => this.removeFromTracks.some(tr => tr.track.uri == uri))))
-            console.log('Deleting from playlist', playlist.id, 'tracks with uris:', trackURIs);
+            const deleteURIs = this.removeFromTracks.filter(t => this.willBeDeleted(t)).map(tr => tr.track.uri)
+            console.log('Deleting from playlist', playlist.id, 'tracks with uris:', deleteURIs);
             const resp = await fetch(`/deleteTracks?userID=${this.me.id}&playlistID=${playlist.id}`, {
                 method: "POST", // *GET, POST, PUT, DELETE, etc.
                 headers: {
                     ...this.apiRequestOptions.headers,
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    trackURIs
-                })
+                body: JSON.stringify(deleteURIs)
             })
             const respObj = await resp.json();
             if (!respObj.error) {
