@@ -4,7 +4,9 @@ var bodyParser = require('body-parser')
 const app = express()
 app.use(bodyParser.json())
 const SpotifyWebApi = require('spotify-web-api-node');  // https://github.com/thelinmichael/spotify-web-api-node
+const { default: nodeFetch } = require('node-fetch')
 const path = require('path')
+const { execSync } = require('child_process')
 const PORT_NO = 3000;
 
 // NOTE: Getting Unauthorized errors means you need to get a new access token (todo: add ability for backend to refresh access token)
@@ -160,4 +162,26 @@ async function getAll(fn, maxLimit, ...args) {
 }
 
 
-app.listen(PORT_NO, () => console.log(`${__filename}: Express server listening on http://${(process.env.hostname || 'localhost')}:${PORT_NO}`))
+app.listen(PORT_NO, async () => {
+    const url = `http://${(process.env.hostname || 'localhost')}:${PORT_NO}/`
+    console.log(`Express server listening on ${url}`)
+
+    // Try activate existing app window or launch new Chrome app window to the page
+    const CHROME_CDP_PORT = 9333
+    const existingTab = await (await nodeFetch(`http://127.0.0.1:${CHROME_CDP_PORT}/json`)).json()
+        .then(tabs => tabs.find(t => t.url === url))
+        .catch(err => console.warn(`Unable to get Chrome tabs: ${err}`))
+    
+        if (existingTab) {
+        console.log(`Activating existing Chrome tab ${existingTab.id}`)
+        await nodeFetch(`http://127.0.0.1:${CHROME_CDP_PORT}/json/activate/${existingTab.id}`)
+    } else {
+        console.log(`No existing Chrome tab found, launching new Chrome app window`)
+        if (process.platform === 'win32') {
+            execSync(`start chrome -ArgumentList "--new-window --app=${url}"`, { shell: 'powershell' })
+        } else if (process.platform === 'darwin') {
+            execSync(`open -n -b com.google.Chrome --args --app=${url}`)
+        }
+    }
+
+})
