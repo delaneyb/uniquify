@@ -15,8 +15,8 @@ var vueApp = new Vue({
     data: {
         accessToken: lsCache.fetch('accessToken'),
         /** null if not logged in/undefined */
-        me: lsCache.fetch('me'),
-        playlists: lsCache.fetch('playlists'),
+        me: null,
+        playlists: [],
         playlistsFilter: '',
         /** playlist to remove songs from */
         removeFrom: undefined,
@@ -31,6 +31,17 @@ var vueApp = new Vue({
         playlists: {
             handler: lsCache.save.bind(null, 'playlists'),
             deep: true  // Also make sure to save when we e.g. fetch the tracks within a playlist
+        }
+    },
+    async mounted() {
+        try {
+            await this.getMe()
+            await this.getMyPlaylists()
+        } catch (error) {
+            if (/Unauthorized/i.test(error)) {
+                // Need to authenticate first
+                this.accessToken = ''
+            }
         }
     },
     computed: {
@@ -102,9 +113,17 @@ var vueApp = new Vue({
                 return tr.track.name.toLowerCase() == track.track.name.toLowerCase()
             })
         },
-        async getMyDetails() {
+        async getMe() {
             const resp = await fetch('/getMe', this.apiRequestOptions);
+            if (resp.status !== 200) throw new Error(await resp.text())
             this.me = await resp.json();
+        },
+        async getMyDetailsClicked() {
+            try {
+                await this.getMe()
+            } catch (error) {
+                alert(error)
+            }
         },
         async getMyPlaylists() {
             const resp = await fetch(`/getPlaylists?userID=${this.me.id}`, this.apiRequestOptions);
@@ -127,13 +146,13 @@ var vueApp = new Vue({
                 })
             });
             // Just update each track object, leaving it inside that particular playlist
-            const featuresByTrack = (await resp.json()).body.audio_features.forEach((v, i) => {
+            const featuresByTrack = (await resp.json()).forEach((v, i) => {
                 tracks[i].track = { ...tracks[i].track, ...v }
             })
             console.log('Track features:', featuresByTrack);
         },
-        async deleteTracks(playlist, tracksToRemove) {
-            const deleteURIs = this.removeFromTracks.filter(t => this.willBeDeleted(t)).map(tr => tr.track.uri)
+        async deleteTracks(playlist, deleteURIs) {
+            deleteURIs ||= this.removeFromTracks.filter(t => this.willBeDeleted(t)).map(tr => tr.track.uri)
             console.log('Deleting from playlist', playlist.id, 'tracks with uris:', deleteURIs);
             const resp = await fetch(`/deleteTracks?userID=${this.me.id}&playlistID=${playlist.id}`, {
                 method: "POST", // *GET, POST, PUT, DELETE, etc.
@@ -151,5 +170,27 @@ var vueApp = new Vue({
                 console.warn('Backend returned error while trying to delete tracks', respObj.error);
             }
         },
+        async removeTracksFromPlaylistOutsideBPMRange() {
+            debugger
+            // Get the features of all the tracks in the selected playlist if we dont already have them
+            if (!this.removeFromTracks.every(tr => tr.track.tempo)) await this.getTracksFeatures(this.removeFromTracks)
+            // Collect one or more low and high BPM input ranges via browser prompt comma separated.
+            // Example: 85-95,175-185 should result in 2 ranges of 85-95 and 175-185
+            const ranges = prompt('Enter one or more BPM ranges to filter tracks by, comma separated. Example: 85-95,175-185', '85-95,175-185')
+            // Split the ranges into an array
+            const rangesArray = ranges.split(',')
+            // Filter out any empty strings
+            const rangesArrayFiltered = rangesArray.filter(r => r)
+            // For each range, split it into min and max BPM
+            const rangesArrayFilteredSplit = rangesArrayFiltered.map(r => r.split('-'))
+            // For each range, convert the min and max BPM to numbers
+            const rangesArrayFilteredSplitNum = rangesArrayFilteredSplit.map(r => r.map(n => Number(n)))
+            // Find tracks to be removed - any that dont fall into at least one of the ranges
+            const tracksToRemove = this.removeFromTracks.filter(tr => !rangesArrayFilteredSplitNum.some(r => tr.track.tempo >= r[0] && tr.track.tempo <= r[1]))
+            // Confirm
+            if (!confirm(`Are you sure you want to remove ${tracksToRemove.length} tracks from ${this.removeFrom.name}?`)) return
+            // Delete the tracks from the playlist
+            await this.deleteTracks(this.removeFrom, tracksToRemove.map(tr => tr.track.uri))
+        }
     }
 })

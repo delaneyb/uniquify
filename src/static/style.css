@@ -2,10 +2,13 @@
 
 html {
   box-sizing: border-box;
+  width: 100%;
+  overflow-x: hidden;
 }
 
 *, *:before, *:after {
   box-sizing: inherit;
+  text-wrap: wrap;
 }
 
 body {
